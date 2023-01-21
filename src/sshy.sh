@@ -120,7 +120,6 @@ fi
 # If the user specified the --timer option, print the execution time
 if [ -n "$timer" ]; then
     echo
-
     end=$(date +%s.%N)
     runtime=$(echo "$end - $start" | bc)
     echo "Execution time: $runtime seconds"
