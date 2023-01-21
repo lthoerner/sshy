@@ -3,6 +3,9 @@
 # SSHy is a simple script to list SSH logins in a more human-readable format.
 # It uses the /var/log/auth.log file, and optionally the /var/log/auth.log.1 file.
 
+# Time the execution of the script
+start=$(date +%s.%N)
+
 # Parse command line arguments
 while [ "$1" != "" ]; do
     case $1 in
@@ -14,6 +17,9 @@ while [ "$1" != "" ]; do
             ;;
         -24 | --24-hour )
             twfr_format=1
+            ;;
+        -t | --timer )
+            timer=1
             ;;
         -h | --help )
             help=1
@@ -31,6 +37,7 @@ if [ -n "$help" ]; then
     echo "  -i, --include-old: Includes logs from auth.log.1"
     echo "  -r, --reverse-output: Sorts entries by newest to oldest instead of oldest to newest"
     echo "  -24, --24-hour: Uses 24-hour format instead of 12-hour format for timestamps"
+    echo "  -t, --timer: Prints the script's execution time"
     echo "  -h, --help: Displays this help message"
     exit 0
 fi
@@ -108,6 +115,15 @@ else
     do
         echo "$line"
     done
+fi
+
+# If the user specified the --timer option, print the execution time
+if [ -n "$timer" ]; then
+    echo
+
+    end=$(date +%s.%N)
+    runtime=$(echo "$end - $start" | bc)
+    echo "Execution time: $runtime seconds"
 fi
 
 exit 0
