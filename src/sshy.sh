@@ -3,6 +3,14 @@
 # SSHy is a simple script to list SSH logins in a more human-readable format.
 # It uses the /var/log/auth.log file.
 
+# Help message
+# echo "Usage: ./sshy.sh [OPTIONS]"
+# echo "Options:"
+# echo "  -i, --include-old: Includes logs from auth.log.1"
+# echo "  -r, --reverse-output: Sorts entries by newest to oldest instead of oldest to newest"
+# echo "  -24, --24-hour: Uses 24-hour format instead of 12-hour format for timestamps"
+# echo "  -h, --help: Displays this help message"
+
 # Get the options
 while [ "$1" != "" ]; do
     case $1 in
@@ -38,7 +46,6 @@ fi
 output_lines=()
 
 # For every line that indicates a successful login
-# If the user specified the include-old option, include logs from auth.log.1
 while read -r line
 do
     match=$(grep -oP '(\w+ [\d]{2} [\d:]{8} .* sshd\[[\d]+\]: Accepted (publickey|password) for \w+ from [\d.]+)' <<< "$line")
@@ -53,12 +60,13 @@ do
         # Get the authentication method
         authtype=$(grep -oP '(password|publickey)' <<< "$match")
 
-        # Turn the date into a more human-readable format, e.g. "01/16/2023 12:00 PM" or "01/16/2023 12:00"
+        # Turn the date into a more human-readable format, e.g. "01/16/2023 12:00 PM"
+        # or "01/16/2023 12:00" if the user specified the --24-hour option
         if [ -n "$twfr_format" ]; then
             date=$(date -d "$date" "+%m/%d/%Y %H:%M")
         else
             date=$(date -d "$date" "+%m/%d/%Y %I:%M %p")
-        fiz
+        fi
 
         # Turn authtype from "password" to "a password" to "a key" respectively
         if [ "$authtype" = "password" ]; then
@@ -74,9 +82,17 @@ do
 done < /var/log/auth.log
 
 # Print the output lines
-for line in "${output_lines[@]}"
-do
-    echo "$line"
-done
+# If the user specified the --reverse-output option, reverse the order
+if [ -n "$reverse_output" ]; then
+    for ((i=${#output_lines[@]}-1; i>=0; i--))
+    do
+        echo "${output_lines[$i]}"
+    done
+else
+    for line in "${output_lines[@]}"
+    do
+        echo "$line"
+    done
+fi
 
 exit 0
