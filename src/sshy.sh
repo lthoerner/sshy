@@ -43,43 +43,60 @@ if [ -n "$help" ]; then
     exit 0
 fi
 
+input_files=('/var/log/auth.log')
+
+# If the user specified the --include-old option, include logs from auth.log.1
+if [ -n "$include_old" ]; then
+    input_files+=('/var/log/auth.log.1')
+fi
+
 output_lines=()
 
-# For every line that indicates a successful login
-while read -r line
+# For every file in the input files array
+for file in "${input_files[@]}"
 do
-    match=$(grep -oP '(\w+ [\d]{2} [\d:]{8} .* sshd\[[\d]+\]: Accepted (publickey|password) for \w+ from [\d.]+)' <<< "$line")
+    # If the file exists
+    if [ -f "$file" ]; then
+        # For every line that indicates a successful login
+        while read -r line
+        do
+            match=$(grep -oP '(\w+ [\d]{2} [\d:]{8} .* sshd\[[\d]+\]: Accepted (publickey|password) for \w+ from [\d.]+)' <<< "$line")
 
-    if [ -n "$match" ]; then
-        # Get the username
-        username=$(grep -oP '(?<=for )\w+' <<< "$match")
-        # Get the IP address
-        ip=$(grep -oP '((\d+\.){3}\d+)' <<< "$match")
-        # Get the date
-        date=$(grep -oP '(\w+ [\d]{2} [\d:]{8})' <<< "$match")
-        # Get the authentication method
-        authtype=$(grep -oP '(password|publickey)' <<< "$match")
+            if [ -n "$match" ]; then
+                # Get the username
+                username=$(grep -oP '(?<=for )\w+' <<< "$match")
+                # Get the IP address
+                ip=$(grep -oP '((\d+\.){3}\d+)' <<< "$match")
+                # Get the date
+                date=$(grep -oP '(\w+ [\d]{2} [\d:]{8})' <<< "$match")
+                # Get the authentication method
+                authtype=$(grep -oP '(password|publickey)' <<< "$match")
 
-        # Turn the date into a more human-readable format, e.g. "01/16/2023 12:00 PM"
-        # or "01/16/2023 12:00" if the user specified the --24-hour option
-        if [ -n "$twfr_format" ]; then
-            date=$(date -d "$date" "+%m/%d/%Y %H:%M")
-        else
-            date=$(date -d "$date" "+%m/%d/%Y %I:%M %p")
-        fi
+                # Turn the date into a more human-readable format, e.g. "01/16/2023 12:00 PM"
+                # or "01/16/2023 12:00" if the user specified the --24-hour option
+                if [ -n "$twfr_format" ]; then
+                    date=$(date -d "$date" "+%m/%d/%Y %H:%M")
+                else
+                    date=$(date -d "$date" "+%m/%d/%Y %I:%M %p")
+                fi
 
-        # Turn authtype from "password" to "a password" to "a key" respectively
-        if [ "$authtype" = "password" ]; then
-            authtype="a password"
-        else
-            authtype="a key"
-        fi
+                # Turn authtype from "password" to "a password" to "a key" respectively
+                if [ "$authtype" = "password" ]; then
+                    authtype="a password"
+                else
+                    authtype="a key"
+                fi
 
-        # Print the information
-        output_lines+=("[$date] $username logged in from $ip using $authtype")
+                # Print the information
+                output_lines+=("[$date] $username logged in from $ip using $authtype")
 
+            fi
+        done < /var/log/auth.log
+    else
+        echo "Error: $file does not exist on your system."
+        exit 1
     fi
-done < /var/log/auth.log
+done
 
 # Print the output lines
 # If the user specified the --reverse-output option, reverse the order
