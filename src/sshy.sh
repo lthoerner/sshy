@@ -1,17 +1,9 @@
 #!/bin/bash
 
 # SSHy is a simple script to list SSH logins in a more human-readable format.
-# It uses the /var/log/auth.log file.
+# It uses the /var/log/auth.log file, and optionally the /var/log/auth.log.1 file.
 
-# Help message
-# echo "Usage: ./sshy.sh [OPTIONS]"
-# echo "Options:"
-# echo "  -i, --include-old: Includes logs from auth.log.1"
-# echo "  -r, --reverse-output: Sorts entries by newest to oldest instead of oldest to newest"
-# echo "  -24, --24-hour: Uses 24-hour format instead of 12-hour format for timestamps"
-# echo "  -h, --help: Displays this help message"
-
-# Get the options
+# Parse command line arguments
 while [ "$1" != "" ]; do
     case $1 in
         -i | --include-old )
@@ -43,24 +35,28 @@ if [ -n "$help" ]; then
     exit 0
 fi
 
-input_files=('/var/log/auth.log')
+input_files=()
 
 # If the user specified the --include-old option, include logs from auth.log.1
 if [ -n "$include_old" ]; then
-    input_files+=('/var/log/auth.log.1')
+    input_files+=("/var/log/auth.log.1")
 fi
+
+# Always include logs from auth.log
+input_files+=("/var/log/auth.log")
 
 output_lines=()
 
-# For every file in the input files array
 for file in "${input_files[@]}"
 do
+    echo "Reading $file..."
+    
     # If the file exists
     if [ -f "$file" ]; then
         # For every line that indicates a successful login
         while read -r line
         do
-            match=$(grep -oP '(\w+ [\d]{2} [\d:]{8} .* sshd\[[\d]+\]: Accepted (publickey|password) for \w+ from [\d.]+)' <<< "$line")
+            match=$(grep -oP '(\w+\s+\d+ [\d:]{8} .* sshd\[[\d]+\]: Accepted (publickey|password) for \w+ from [\d.]+)' <<< "$line")
 
             if [ -n "$match" ]; then
                 # Get the username
@@ -68,7 +64,7 @@ do
                 # Get the IP address
                 ip=$(grep -oP '((\d+\.){3}\d+)' <<< "$match")
                 # Get the date
-                date=$(grep -oP '(\w+ [\d]{2} [\d:]{8})' <<< "$match")
+                date=$(grep -oP '(\w+\s+\d+ [\d:]{8})' <<< "$match")
                 # Get the authentication method
                 authtype=$(grep -oP '(password|publickey)' <<< "$match")
 
@@ -89,14 +85,16 @@ do
 
                 # Print the information
                 output_lines+=("[$date] $username logged in from $ip using $authtype")
-
             fi
-        done < /var/log/auth.log
+        done < "$file"
+    # If the file does not exist
     else
         echo "Error: $file does not exist on your system."
         exit 1
     fi
 done
+
+echo
 
 # Print the output lines
 # If the user specified the --reverse-output option, reverse the order
