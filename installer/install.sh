@@ -13,6 +13,6 @@ echo "Setting up permissions for script file"
 chmod +x "$install/sshy.sh"
 
 echo "SSHy has been installed successfully. It is recommended that you install Ally (https://github.com/Eyesonjune18/ally) to manage your scripts."
-echo "To add an alias for SSHy, run 'cd ~/.local/bin/sshy && mkal sshy'"
+echo "To add an alias for SSHy, run 'cd ~/.local/bin/sshy && mkal sshy.sh'"
 
 shred -u "$0"
