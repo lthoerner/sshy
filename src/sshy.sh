@@ -42,6 +42,25 @@ if [ -n "$help" ]; then
     exit 0
 fi
 
+# Get the first line of the auth.log file to choose the correct timestamp format
+first_line=$(head -n 1 /var/log/auth.log)
+
+echo "Checking timestamp format..."
+
+# If the auth.log file uses the "Jan 16 12:00:00" timestamp format
+if [[ $(grep -oP "^\w+\s+\d+ [\d:]{8}" <<< "$first_line") ]]; then
+    echo "Using the standard timestamp format."
+    date_pattern="^\w+\s+\d+ [\d:]{8}"
+# If the auth.log file uses the "2023-01-16T12:00:00.123456-03:00" timestamp format
+elif [[ $(grep -oP "^\d+-\d+-\d+T[\d:]{8}\.\d+-\d+:\d+" <<< "$first_line") ]]; then
+    echo "Using the alternate timestamp format."
+    date_pattern="^\d+-\d+-\d+T[\d:]{8}\.\d+-\d+:\d+"
+# If the auth.log file uses an unknown timestamp format
+else
+    echo "Error: Could not determine the timestamp format of your auth.log file."
+    exit 1
+fi
+
 input_files=()
 
 # If the user specified the --include-old option, include logs from auth.log.1
@@ -63,7 +82,7 @@ do
         # For every line that indicates a successful login
         while read -r line
         do
-            match=$(grep -oP '(\w+\s+\d+ [\d:]{8} .* sshd\[[\d]+\]: Accepted (publickey|password) for \w+ from [\d.]+)' <<< "$line")
+            match=$(grep -oP "($date_pattern .* sshd\[[\d]+\]: Accepted (publickey|password) for \w+ from [\d.]+)" <<< "$line")
 
             if [ -n "$match" ]; then
                 # Get the username
@@ -71,7 +90,7 @@ do
                 # Get the IP address
                 ip=$(grep -oP '((\d+\.){3}\d+)' <<< "$match")
                 # Get the date
-                date=$(grep -oP '(\w+\s+\d+ [\d:]{8})' <<< "$match")
+                date=$(grep -oP "($date_pattern)" <<< "$match")
                 # Get the authentication method
                 authtype=$(grep -oP '(password|publickey)' <<< "$match")
 
@@ -97,7 +116,7 @@ do
     # If the file does not exist
     else
         echo "Error: $file does not exist on your system."
-        exit 1
+        exit 2
     fi
 done
 
