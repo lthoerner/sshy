@@ -57,7 +57,7 @@ elif [[ $(grep -oP "^\d+-\d+-\d+T[\d:]{8}\.\d+-\d+:\d+" <<< "$first_line") ]]; t
     date_pattern="^\d+-\d+-\d+T[\d:]{8}\.\d+-\d+:\d+"
 # If the auth.log file uses an unknown timestamp format
 else
-    echo "Error: Could not determine the timestamp format of your auth.log file."
+    echo "Error: Could not determine the timestamp format of your auth.log file." >&2
     exit 1
 fi
 
@@ -115,7 +115,7 @@ do
         done < "$file"
     # If the file does not exist
     else
-        echo "Error: $file does not exist on your system."
+        echo "Error: $file does not exist on your system." >&2
         exit 2
     fi
 done
