@@ -34,7 +34,7 @@ done
 if [ -n "$help" ]; then
     echo "Usage: ./sshy.sh [OPTIONS]"
     echo "Options:"
-    echo "  -i, --include-old: Includes logs from auth.log.1"
+    echo "  -i, --include-old: Includes logs from auth.log.1, where older logs are stored"
     echo "  -r, --reverse-output: Sorts entries by newest to oldest instead of oldest to newest"
     echo "  -24, --24-hour: Uses 24-hour format instead of 12-hour format for timestamps"
     echo "  -t, --timer: Prints the script's execution time"
