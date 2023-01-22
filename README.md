@@ -29,10 +29,10 @@ To run the script, install Ally and use `mkal` to create a shortcut. You can als
 
 ### sshy
 It adds an alias for any executable file to .bash_aliases. It will also remove the executable's extension if applicable.
-Usage: `sshy [OPTIONS]`
-Options:
-  -i, --include-old: Includes logs from auth.log.1, where older logs are stored
-  -r, --reverse-output: Sorts entries by newest to oldest instead of oldest to newest
-  -24, --24-hour: Uses 24-hour format instead of 12-hour format for timestamps
-  -t, --timer: Prints the script's execution time
-  -h, --help: Displays this help message
+Usage: `sshy [OPTIONS]`  
+Options:  
+  -i, --include-old: Includes logs from auth.log.1, where older logs are stored  
+  -r, --reverse-output: Sorts entries by newest to oldest instead of oldest to newest  
+  -24, --24-hour: Uses 24-hour format instead of 12-hour format for timestamps  
+  -t, --timer: Prints the script's execution time  
+  -h, --help: Displays this help message  
