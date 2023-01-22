@@ -22,6 +22,8 @@ chmod +x install.sh
 
 The installer script will delete itself automatically when the installation finishes.
 
+You will also need to run `sudo chmod +r /var/log/auth.log /var/log/auth.log.1` in order to allow the script to read your log files.
+
 ## Explanation & Usage
 SSHy contains one command (the script itself) with multiple options.
 
